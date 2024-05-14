@@ -63,6 +63,8 @@ class Ooba:
 		self.model_downloaded_fullpath = None
 
 	def is_already_running(self):
+
+		return False
 		# Resolve the directory of the script_path
 		for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
 			try:

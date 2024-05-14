@@ -1,13 +1,12 @@
 import argparse
 import configparser
 import os
-import time
-from lib.util import parse_batch, is_int, preprocess_config_string, revert_placeholders_in_config
-import lib.db
 import signal
 import sys
-import re
-import io
+import time
+
+import lib.db
+from lib.util import is_int, parse_batch
 
 ooba_instance = None
 
@@ -34,10 +33,6 @@ def str2bool(v):
 def main():
 	global ooba_instance
 
-	# Preprocess the configuration content
-	config_content = preprocess_config_string('config.cfg')
-	config_file_iostream = io.StringIO(config_content)
-
 	# Argument parser setup
 	parser = argparse.ArgumentParser(description="Run benchmark pipeline based on specified configuration.")	
 	parser.add_argument('--v1', help="Run v1 of EQ-Bench (legacy). V1 has been superseded and results are not directly comparable to v2 results.")
@@ -60,17 +55,17 @@ def main():
 		os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = '0'	
 
 	# This has to be imported AFTER hf_transfer env var is set.
-	from lib.run_bench import run_benchmark
 	import openai
 
-	# Load the configuration
-	# These options allow case sensitive keys, which we need to preserve the case of model paths
+	from lib.run_bench import run_benchmark
+
 	config = configparser.RawConfigParser(allow_no_value=True)
 	config.optionxform = str
-	config.read_file(config_file_iostream)
+	config.read('config.cfg')
 
-	# Revert the placeholders to colons in the parsed configuration
-	preprocessed_benchmark_runs = revert_placeholders_in_config(config['Benchmarks to run'])
+
+
+	print(f"{config['Oobabooga config']=}")
 
 	questions_fn = './data/eq_bench_v2_questions_171.json'
 	if args.v1:
@@ -78,20 +73,12 @@ def main():
 
 	# Check for OpenAI fields	
 	api_key = config['OpenAI'].get('api_key', '')
-	
-	base_url = 'https://api.openai.com/v1/'
-	
-	alt_url = config['OpenAI'].get('openai_compatible_url', '')
-	
-	if alt_url:
-		base_url = alt_url
 
 	# If OpenAI credentials are provided, set them
 	openai_client = None
 	if api_key:
 		openai_client = openai.OpenAI(
-			api_key=api_key,
-			base_url=base_url
+			api_key=api_key
 		)
 
 	# Check for huggingface access token
@@ -158,11 +145,25 @@ def main():
 	# Run benchmarks based on the config
 	n_benchmarks = 0
 	start_time = time.time()
-	parsed_batch = parse_batch(preprocessed_benchmark_runs, ooba_launch_script, launch_ooba)
+	parsed_batch = parse_batch(config['Benchmarks to run'], ooba_launch_script, launch_ooba)
+
+	print('Parsed batch:', parsed_batch)
+	new_parsed_batch = []
+	for b in parsed_batch:
+		b = list(b)
+		b[7] += " --gpu-split 18,18"
+		b = tuple(b)
+		new_parsed_batch.append(b)
+	parsed_batch = new_parsed_batch
+
+	print('Parsed batch:', parsed_batch)	
 
 	# Make dict of models that need to be deleted
 	models_to_delete = {}
 	models_remaining = []
+
+
+	print('here')
 	
 	for run_id, prompt_type, model_path, lora_path, quantization, n_iterations, \
 	inference_engine, ooba_params, include_patterns, exclude_patterns in parsed_batch:
