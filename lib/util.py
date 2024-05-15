@@ -86,7 +86,7 @@ def parse_batch(batch, ooba_launch_script, launch_ooba):
 			model_path = model_path.strip()			
 			if not model_path and launch_ooba:
 				raise Exception('Missing model path.')
-			if model_path:
+			if model_path and inference_engine in ['ooba', 'transformers']:
 				# Note: if a hf model id starts with '~', that will cause issues here.
 				if model_path.startswith('~'):
 					model_path = os.path.expanduser(model_path)
@@ -108,22 +108,23 @@ def parse_batch(batch, ooba_launch_script, launch_ooba):
 			
 			# Read inference engine option from config
 			inference_engine = inference_engine.strip().lower()
-			if inference_engine not in ['transformers', 'ooba', 'openai']:
-				raise Exception("inference_engine in config.cfg must be transformers, openai or oobabooga.")
+			if inference_engine not in ['transformers', 'ooba', 'openai', 'llama.cpp', 'anthropic', 'mistralai', 'gemini']:
+				raise Exception("inference_engine in config.cfg must be transformers, openai, oobabooga or llama.cpp.")
 			if inference_engine == 'ooba' and not ooba_launch_script:
 				raise Exception('ooba_launch_script not set in config.cfg')
 			
 			prompt_format = prompt_format.strip()
-			if inference_engine == 'transformers':
-				template_path = './instruction-templates/' + prompt_format + '.yaml'
-				if (not prompt_format) or not os.path.exists(template_path):
-					raise Exception('Error: prompt template not found: ' + template_path)
+			if inference_engine in ['transformers', 'llama.cpp']:
+				if prompt_format:
+					template_path = './instruction-templates/' + prompt_format + '.yaml'
+					if (not prompt_format) or not os.path.exists(template_path):
+						raise Exception('Error: prompt template not found: ' + template_path)
 			elif inference_engine == 'ooba':
 				ooba_dir = os.path.dirname(ooba_launch_script)
-				template_path = ooba_dir + '/instruction-templates/' + prompt_format + '.yaml'
-				if (not prompt_format) or not os.path.exists(template_path):
-					raise Exception('Error: prompt template not found: ' + template_path)
-
+				if prompt_format:
+					template_path = ooba_dir + '/instruction-templates/' + prompt_format + '.yaml'
+					if (not prompt_format) or not os.path.exists(template_path):
+						raise Exception('Error: prompt template not found: ' + template_path)
 			parsed.append((
 					run_id, prompt_format, model_path, lora_path, quantization, int(n_iterations), inference_engine, ooba_params_str, include_patterns, exclude_patterns
 			))

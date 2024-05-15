@@ -8,7 +8,95 @@ The latest leaderboard can be viewed at [EQ-Bench Leaderboard](https://eqbench.c
 
 ## News
 
-### Version 2 Released
+### 2024-04-19 Minor updates
+
+- Changed behaviour when using Transformers and no chat template is specified. In this scenario, the benchmark will now apply the tokenizer's chat template if there is one.
+- Models are now loaded in 16 bit precision if "none" quantisation is selected.
+- Preliminary support for Llama3 models (adding <|eot_id|> to the tokenizer).
+
+### Version 2.3
+
+This version includes two new benchmarks: `creative-writing` and `judgemark`.
+
+#### Creative Writing Benchmark
+
+This is a LLM-as-a-judge benchmark using detailed criteria to assess the model's output to a set of creative writing prompts.
+
+#### Judgemark
+
+This is the latest benchmark task in the EQ-Bench pipeline. It tests a model's ability to judge creative writing from a set of pre-generated outputs from 20 test models. The writing prompts & judging process are the same as those used in the creative writing benchmark. Several metrics are aggregated on the judge's performance (correlation with other benchmarks + measures of spread), resulting in a "Judgemark" score.
+
+#### Launching the New Benchmarks
+
+To launch individual benchmark tasks: 
+
+`python eq-bench.py --benchmarks eq-bench`
+
+`python eq-bench.py --benchmarks creative-writing`
+
+`python eq-bench.py --benchmarks judgemark`
+
+The creative-writing and judgemark tasks require the following parameters to be configures in your config.cfg:
+
+`judge_model_api = `
+`judge_model = `
+`judge_model_api_key = `
+
+#### Creative Writing Benchmark Details
+
+Official scores for the creative-writing benchmark use claude-3-opus as judge. However you can use any openai, mistralai or anthropic model as judge. Be aware that the results won't be directly comparable between judge models.
+
+The creative writing benchmark involves 19 writing prompts. The model's output is then judged according to 36 criteria for good & bad writing, with each criteria being scored 0-10.
+
+Given the small number of questions in the test set, you may wish to run several iterations of the benchmark to reduce variance. You can set n_iterations in the config per benchmark run. We recommend 3+ iterations. Benchmarking a model over 3 iterations using Claude Opus will cost approx. $3.00.
+
+Temperature is set at 0.7 for the test model inference, so output will vary between iterations.
+
+[For more details, click here.](https://eqbench.com/about.html)
+
+<details>
+<summary>### Version 2.2 Released</summary>
+
+Changes:
+
+- Added [llama.cpp](https://github.com/ggerganov/llama.cpp) support
+- Fixed bug with ooba regularly crashing
+- Misc compatibility & bug fixes
+
+* If using llama.cpp as the inferencing engine, you will need to launch the llama.cpp server first and then run the benchmark. The benchmark will look for the api at the default address of `http://127.0.0.1:8080`. Multiple benchmark runs are not supported when using llama.cpp.
+
+Other news: EQ-Bench has been added to eleuther-eval-harness! Go [check it out](https://github.com/EleutherAI/lm-evaluation-harness).
+
+</details>
+
+<details>
+<summary>### Version 2.1 Released</summary>
+
+Changes:
+
+- Add support for additional languages (just en and de in this release)
+- Add support for custom OpenAI-compatible api endpoints, such as ollama
+- By default the revision component of the questions is not included
+
+<details>
+<summary>v2.1 details</summary>
+
+### DE Support
+
+German language support was kindly added by [CrispStrobe](https://github.com/CrispStrobe). The prompts were translated by GPT-4. You can expect the scores using the German version to be slightly lower than the English version, assuming the model's language competency for each is equal.
+
+### Revision Component
+
+After collecting a lot of data from v2, it's clear that the revision component has a mostly negative effect. Only 8% of the time does it improve the score, and on average the revised score is 2.95% lower than the first pass score. Since we choose the highest of the first pass vs revised aggregate scores, the revision component is rarely affecting the overall score.
+
+Since revising requires significantly more inference, we opt to set it off by default. You can still enable it with the `-revise` argument. The upshot of disabling revision is that the benchmark is now much cheaper/faster to run, and the prompts are a little less complex. This change should have a negligible effect on scores.
+
+</details>
+
+</details>
+
+<details>
+<summary>### Version 2 Released</summary>
 
 V2 of EQ-Bench contains 171 questions (compared to 60 in v1) and a new system for scoring. It is better able to discriminate performance differences between models. V2 is less subject to variance caused by perturbations (e.g. temp, sampler, quantisation, prompt format, system message). Also added is the ability to upload results to firebase.
 
@@ -51,9 +139,14 @@ The result of these changes is better discriminative ability of the benchmark, a
 
 </details>
 
-### Version 1.1 Released
+</details>
+
+<details>
+<summary>### Version 1.1 Released</summary>
 
 This version adds support for Oobabooga. The benchmark pipeline can automatically download each model, launch the model with ooba using the specified parameters, and close the ooba server after the run completes, optionally deleting the model files.
+
+</details>
 
 ## Requirements
 
@@ -124,7 +217,7 @@ Note: Ooobabooga is optional. If you prefer to use transformers as the inference
       - `lora_path` (optional): Path to local lora adapter
       - `quantization`: Using bitsandbytes package (8bit, 4bit, None)
       - `n_iterations`: Number of benchmark iterations (final score will be an average)
-      - `inference_engine`: Set this to transformers, openai or ooba.
+      - `inference_engine`: Set this to transformers, openai, ooba or llama.cpp.
       - `ooba_params` (optional): Any additional ooba params for loading this model (overrides the global setting above)
       - `downloader_filters` (optional): Specify --include or --exclude patterns (using same syntax as huggingface-cli download)
 
@@ -142,6 +235,8 @@ Note: Ooobabooga is optional. If you prefer to use transformers as the inference
 
 `myrun5, Mistral, mistralai/Mistral-7B-Instruct-v0.2, , None, 1, ooba, --loader transformers --gpu-memory 12, --exclude "*.bin"`
 
+`myrun6, ChatML, model_name, , None, 1, llama.cpp, None,`
+
 ## Running the benchmark
 
 - Run the benchmark:
@@ -156,7 +251,9 @@ Note: Ooobabooga is optional. If you prefer to use transformers as the inference
 - `-f`: Use hftransfer for multithreaded downloading of models (faster but can be unreliable).
 - `-v`: Display more verbose output.
 - `-r`: Set the number of retries to attempt if a benchmark run fails. Default is 5.
-- `--v1`: Runs v1 of the benchmark (legacy). If not set, the benchmark defaults to v2.
+- `-l`: Sets the language: `en` and `de` currently supported. Defaults to English if not specified.
+- `-v1`: Runs v1 of the benchmark (legacy). If not set, the benchmark defaults to v2.
+- `-revise`: Enables the revision component of the test questions (this is off by default since v2.1).
 
 ## Prompt Formats / Instruction Templates
 
@@ -164,6 +261,10 @@ EQ-Bench uses the same instruction template format as the Oobabooga library. You
 
 - If using `transformers` as the inference engine, the benchmark pipeline uses templates located in `[EQ-Bench dir]/instruction-templates`.
 - If using `ooba` as the inference engine, the pipeline uses templates located in `[ooba dir]/instruction-templates`
+
+When using transformers, if you leave the prompt format blank in config.cfg, transformers will apply the chat template in the tokenizer if there is one.
+
+When using ooba, if you leave the prompt format blank in config.cfg, ooba will make its best guess as to what the prompt format should be.
 
 ## Setting up Firebase / Firestore for Results Uploading (Optional)
 
