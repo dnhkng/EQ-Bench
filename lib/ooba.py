@@ -61,8 +61,13 @@ class Ooba:
 		self.shutdown_message_shown = threading.Event()
 		self.process_end_event = threading.Event()
 		self.model_downloaded_fullpath = None
+  
+		self.port = 5000
 
 	def is_already_running(self):
+		# Patch
+		return False
+     
 		# Resolve the directory of the script_path
 		for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
 			try:
@@ -100,6 +105,10 @@ class Ooba:
 			self.command_args += shlex.split(self.ooba_args)
 		elif self.ooba_args_global:
 			self.command_args += shlex.split(self.ooba_args_global)
+
+		arg_list = shlex.split(self.ooba_args)
+		if "--api-port" in arg_list:
+			self.port = arg_list[arg_list.index('--api-port') + 1]
 
 		if self.verbose:
 			print('Launching ooba with command:')
@@ -188,7 +197,7 @@ class Ooba:
 							# Check for patterns in the output buffer						
 							if url_pattern.search(output_buffer):
 								webui_url = url_pattern.search(output_buffer).group(1).strip()
-								self.url = 'http://127.0.0.1:5000' # Api url should always be this.
+								self.url = f'http://127.0.0.1:{self.port}' # Api url should always be this.
 								self.url_found_event.set()
 								return
 
