@@ -149,7 +149,8 @@ class Ooba:
 				break
 
 	def monitor_output(self, pipe):
-		url_pattern1 = re.compile(r"http://127.0.0.1:5000")
+		url = f'http://127.0.0.1:{self.port}'
+		url_pattern1 = re.compile(re.escape(url))
 		url_pattern2 = re.compile(r"Running on local URL")
 		error_pathnotfound_pattern = re.compile(r"The path to the model does not exist\. Exiting\.")
 		shutdown_pattern = re.compile(r"Shutting down Text generation web UI gracefully\.")
@@ -175,13 +176,13 @@ class Ooba:
 					# There are buffering issues with ooba for the "running on local URL" line
 					# We can't solve this with stdbuf since it doesn't exist on windows. so we
 					# are taking the hacky approach and waiting for the prior line and pausing for 5s.
-					self.url = 'http://127.0.0.1:5000'
+					self.url = f'http://127.0.0.1:{self.port}'
 					time.sleep(5)
 					self.url_found_event.set()
 					continue
 			else:
 				if url_pattern2.search(line):
-					self.url = 'http://127.0.0.1:5000'
+					self.url = f'http://127.0.0.1:{self.port}'
 					time.sleep(5)
 					self.url_found_event.set()
 					continue
