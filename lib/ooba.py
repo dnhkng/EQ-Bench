@@ -43,8 +43,12 @@ class Ooba:
 		self.shutdown_message_shown = threading.Event()
 		self.process_end_event = threading.Event()
 		self.output_queue = queue.Queue()
+		self.port = 5000
 
 	def is_already_running(self):
+		# Fix for multiple instances of ooba running
+		return False
+
 		script_dir = os.path.dirname(os.path.abspath(self.script_path))
 		for proc in psutil.process_iter(['pid', 'name', 'cmdline', 'cwd']):
 			try:
@@ -93,6 +97,11 @@ class Ooba:
 			self.command_args += shlex.split(self.ooba_args)
 		elif self.ooba_args_global:
 			self.command_args += shlex.split(self.ooba_args_global)
+   
+		arg_list = shlex.split(self.ooba_args)
+		if "--api-port" in arg_list:
+			self.port = arg_list[arg_list.index('--api-port') + 1]
+   
 		return self.command_args
 
 	def start(self):
@@ -155,6 +164,7 @@ class Ooba:
 			elif pipe == 'stderr':
 				line = self.process.stderr.readline()
 			if not line:  # EOF
+
 				self.process_end_event.set()
 				break
 			if line.endswith('\n') or pipe == 'stderr':
@@ -222,4 +232,3 @@ class Ooba:
 			self.process.kill()
 		self.process_end_event.set()
 		return
-
