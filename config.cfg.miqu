@@ -1,0 +1,171 @@
+[OpenAI]
+# Optional. Set these if you are testing OpenAI models.
+api_key = 1234
+
+# Optional. Set this if you are using an alternative OpenAI compatible endpoint, like ollama running locally
+openai_compatible_url = http://localhost:8080/v1/
+
+[Huggingface]
+# Optional. This allows the script to download gated models.
+access_token =
+
+# Optional. This is where models will be downloaded to.
+# - defaults to ~/.cache/huggingface/hub
+cache_dir = 
+
+[Results upload]
+# Optional. Set this to allow uploading of results to a google sheets spreadsheet.
+# Note: this feature requires extra configuration (see README).
+google_spreadsheet_url =
+
+[Options]
+# Set to true or false
+trust_remote_code = false
+
+[Oobabooga config]
+# e.g. ~/text-generation-webui/start_linux.sh
+ooba_launch_script = ~/text-generation-webui/start_linux.sh
+
+# Specify any additional oobabooga launch params (this can be overridden on a per-model basis).
+# e.g.:
+# --auto-devices --loader llama.cpp
+ooba_params_global = 
+
+# Set to true or false. Setting to "true" only supports linux (and possibly mac).
+# If set to false, you must launch ooba yourself with --api flag and load the model yourself before running the benchmark.
+# If you are launching ooba yourself, the model_path param will be ignored, and all scheduled ooba benchmark runs will use the same model.
+automatically_launch_ooba = true
+
+# Ooba api request timeout in seconds (default 120). Set higher if you are expecting long inference times.
+ooba_request_timeout = 120
+
+[Benchmarks to run]
+# Define benchmarks in the following format:
+# run_id, instruction_template, model_path, lora_path, quantization, n_iterations, inference_engine, ooba_params, downloader_filters
+
+# Details:
+#
+# - run_id: A name to identify the benchmark run
+# - instruction_template: The filename of the instruction template defining the prompt format, minus the .yaml (e.g. Alpaca)
+# - model_path: Huggingface model ID, local path, or OpenAI model name
+# - lora_path (optional): Path to local lora adapter
+# - quantization: Using bitsandbytes package (8bit, 4bit, None)
+# - n_iterations: Number of benchmark iterations (final score will be an average)
+# - inference_engine: Set this to transformers, openai or ooba.
+# - ooba_params (optional): Any additional ooba params for loading this model (overrides the global setting above)
+# - downloader_filters (optional): Specify --include or --exclude patterns (using same syntax as huggingface-cli download)
+
+# Examples:
+#
+# myrun1, openai_api, gpt-3.5-turbo, , , 1, openai, ,
+# myrun2, Llama-v2, meta-llama/Llama-2-7b-chat-hf, /path/to/local/lora/adapter, 8bit, 3, transformers, , ,
+# myrun3, Alpaca, ~/my_local_model, , None, 1, ooba, --loader transformers --n_ctx 1024 --n-gpu-layers -1, 
+# myrun4, Mistral, TheBloke/Mistral-7B-Instruct-v0.2-GGUF, , None, 1, ooba, --loader llama.cpp --n-gpu-layers -1 --tensor_split 1,3,5,7, --include ["*Q3_K_M.gguf", "*.json"]
+# myrun5, Mistral, mistralai/Mistral-7B-Instruct-v0.2, , None, 1, ooba, --loader transformers --gpu-memory 12, --exclude "*.bin"
+# myrun5, Alpaca, None, , None, 1, llama, None,
+# llama-70b, Alpaca, Llama-3-70B-Instruct-exl2, , None, 1, llama, None,
+# Miqu_combined_Consistency_33_69,2024-02-21 02:36:32,Mistral,/home/dnhkng/Documents/models/miqu-1-70b-sf-4.0bpw-h6-exl2,/home/dnhkng/Documents/LLM/EQ-Bench/None,none,82.54,v2,171.0,1,ooba,  --loader exllamav2 --franken_start 33 --franken_stop 69 --franken_repeat 1 --max_seq_len 8192 --gpu-split 18,18,,
+# Miqu_combined_Consistency_59_74,2024-02-21 03:28:56,Mistral,/home/dnhkng/Documents/models/miqu-1-70b-sf-4.0bpw-h6-exl2,/home/dnhkng/Documents/LLM/EQ-Bench/None,none,81.24,v2,171.0,1,ooba,  --loader exllamav2 --franken_start 59 --franken_stop 74 --franken_repeat 1 --max_seq_len 8192 --gpu-split 18,18,,
+
+# 15_42_bad, Vicuna-v1.1, /home/dnhkng/Documents/models/Nous-Capybara-34B, None, None, 1, ooba,  --loader exllamav2 --franken_start 15 --franken_stop 42 --franken_repeat 1, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-55]-[32-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-19]-[15-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-29]-[9-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-42]-[17-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-56]-[33-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-52]-[31-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-42]-[16-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-36]-[21-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-41]-[20-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-39]-[11-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-43]-[15-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-36]-[17-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-39]-[37-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-53]-[41-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-44]-[17-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-78]-[29-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-49]-[41-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-32]-[5-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-22]-[16-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-32]-[6-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-29]-[2-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-50]-[39-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-36]-[6-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-32]-[15-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-61]-[46-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-42]-[20-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-36]-[3-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-57]-[32-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-34]-[27-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-36]-[1-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-43]-[18-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-36]-[7-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-35]-[27-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-33]-[13-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-50]-[26-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-37]-[5-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-57]-[34-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-36]-[16-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-37]-[6-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-29]-[1-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-40]-[10-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-35]-[30-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-64]-[19-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-43]-[9-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-29]-[12-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-79]-[56-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-44]-[21-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-55]-[15-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-21]-[16-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-17]-[13-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-30]-[1-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-39]-[9-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-8]-[5-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-50]-[29-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-64]-[42-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-29]-[4-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-34]-[12-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-65]-[57-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-33]-[21-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-51]-[40-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-47]-[26-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-33]-[15-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-34]-[4-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-70]-[52-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-31]-[0-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-27]-[14-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-29]-[7-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-27]-[19-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-47]-[44-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-40]-[6-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-79]-[2-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-35]-[8-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-21]-[14-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-29]-[6-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-36]-[30-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-78]-[27-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-16]-[12-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-62]-[45-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-78]-[25-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-39]-[3-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-67]-[17-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-28]-[2-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-51]-[39-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-29]-[11-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-28]-[3-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-44]-[22-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-47]-[23-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-36]-[2-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-79]-[4-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-34]-[2-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-26]-[4-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-54]-[43-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-34]-[8-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-19]-[11-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-34]-[22-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-37]-[20-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-58]-[10-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-36]-[5-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-46]-[35-80]] --max_seq_len 8192 --api-port 5002, None
+Miqu, Mistral, /data/llm_models/miqu-1-70b-sf-6.0bpw-h6-exl2, None, None, 1, ooba,  --loader exllamav2 --franken_layers [[0-63]-[13-80]] --max_seq_len 8192 --api-port 5002, None
