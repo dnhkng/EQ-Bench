@@ -8,6 +8,8 @@ import signal
 import sys
 import re
 import io
+import gc
+import torch
 
 ooba_instance = None
 
@@ -242,6 +244,11 @@ def main():
 				except Exception as e:
 					pass
 			raise
+
+		gc.collect()
+		gc.collect()
+
+		torch.cuda.empty_cache()
 
 		models_remaining = models_remaining[1:]
 
